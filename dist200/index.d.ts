@@ -574,6 +574,7 @@ declare module "Dialogue/NameDialogue" {
 declare module "Bridge/ActionEnum" {
     export enum ActionEnum {
         edit = "edit",
+        error = "error",
         get = "get",
         load = "load",
         move = "move",

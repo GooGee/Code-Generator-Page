@@ -58,8 +58,6 @@ in template
 ```
 
 
-[Data Structure](https://googee.github.io/Code-Generator-Page/docs/structure.html)
-
 [Document](https://googee.github.io/Code-Generator-Page/docs200/model/index.html)
 
 [Template](https://mozilla.github.io/nunjucks/templating.html)

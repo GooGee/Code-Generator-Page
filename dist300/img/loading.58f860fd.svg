@@ -1,0 +1,23 @@
+<?xml version="1.0" standalone="no"?>
+<svg width="64" height="64" viewBox="0 0 256 256" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <g fill="dodgerblue">
+        <circle cx="128" cy="32" r="28"></circle>
+        <circle cx="196" cy="60" r="24"></circle>
+        <circle cx="224" cy="128" r="22"></circle>
+        <circle cx="196" cy="196" r="20"></circle>
+
+        <circle cx="128" cy="224" r="18"></circle>
+        <circle cx="60" cy="196" r="16"></circle>
+        <circle cx="32" cy="128" r="14"></circle>
+        <circle cx="60" cy="60" r="12"></circle>
+
+        <animateTransform
+            attributeName="transform"
+            type="rotate"
+            values="0 128 128; 315 128 128; 270 128 128; 225 128 128; 180 128 128; 135 128 128; 90 128 128; 45 128 128"
+            calcMode="discrete"
+            dur="640ms"
+            repeatCount="indefinite"
+        />
+    </g>
+</svg>

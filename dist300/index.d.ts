@@ -1,9 +1,80 @@
 /// <reference types="node" />
 /// <reference types="lodash" />
-declare module "Event/NameChangeListener" {
+declare module "model/Bridge/ActionEnum" {
+    export enum ActionEnum {
+        edit = "edit",
+        error = "error",
+        get = "get",
+        load = "load",
+        move = "move",
+        open = "open",
+        post = "post",
+        read = "read",
+        refresh = "refresh",
+        save = "save",
+        write = "write"
+    }
+}
+declare module "model/Bridge/IResponse" {
+    import { ActionEnum } from "model/Bridge/ActionEnum";
+    export default interface IResponse {
+        action: ActionEnum;
+        data: any;
+        key: string;
+        message: string;
+        status: number;
+    }
+}
+declare module "model/Bridge/IHandler" {
+    import IResponse from "model/Bridge/IResponse";
+    export default interface IHandler {
+        (data: IResponse): void;
+    }
+}
+declare module "model/Bridge/HandlerManager" {
+    import { ActionEnum } from "model/Bridge/ActionEnum";
+    import IHandler from "model/Bridge/IHandler";
+    export default class HandlerManager {
+        readonly map: Map<ActionEnum, Map<string, IHandler>>;
+        constructor();
+        make(action: ActionEnum): void;
+        add(action: ActionEnum, key: string, handler?: IHandler): void;
+        find(action: ActionEnum, key: string): IHandler | undefined;
+    }
+}
+declare module "model/Bridge/Bridge" {
+    import { ActionEnum } from "model/Bridge/ActionEnum";
+    import HandlerManager from "model/Bridge/HandlerManager";
+    import IResponse from "model/Bridge/IResponse";
+    export default class Bridge {
+        readonly manager: HandlerManager;
+        constructor(manager: HandlerManager);
+        call(response: IResponse): void;
+        isHTTP(action: ActionEnum): boolean;
+        error(code: number, message: string): void;
+    }
+}
+declare module "model/Bridge/IJavaBridge" {
+    export default interface IJavaBridge {
+        call(json: string): void;
+    }
+}
+declare module "model/Bridge/ICEFW" {
+    import Bridge from "model/Bridge/Bridge";
+    import IJavaBridge from "model/Bridge/IJavaBridge";
+    export default interface ICEFW extends Window {
+        bridge: Bridge;
+        JavaBridge: IJavaBridge;
+    }
+}
+declare module "helper/makeBridge" {
+    import ICEFW from "model/Bridge/ICEFW";
+    export default function makeBridge(cefw: ICEFW): void;
+}
+declare module "model/Event/NameChangeListener" {
     import { EventEmitter } from 'events';
     import StrictEventEmitter from 'strict-event-emitter-types';
-    import UniqueItem from "Base/UniqueItem";
+    import UniqueItem from "model/Base/UniqueItem";
     enum EventEnum {
         BeforeNameChange = "BeforeNameChange",
         AfterNameChange = "AfterNameChange"
@@ -25,12 +96,12 @@ declare module "Event/NameChangeListener" {
     const listener: NameChangeListener<UniqueItem>;
     export default listener;
 }
-declare module "Base/IKeyValue" {
+declare module "model/Base/IKeyValue" {
     export default interface IKeyValue {
         [key: string]: any;
     }
 }
-declare module "Base/List" {
+declare module "model/Base/List" {
     export default class List<T> {
         readonly list: Array<T>;
         add(item: T): void;
@@ -44,15 +115,15 @@ declare module "Base/List" {
         };
     }
 }
-declare module "Base/INewable" {
+declare module "model/Base/INewable" {
     export default interface INewable<T> {
         new (...args: any[]): T;
     }
 }
-declare module "Base/ItemList" {
-    import Item from "Base/Item";
-    import List from "Base/List";
-    import INewable from "Base/INewable";
+declare module "model/Base/ItemList" {
+    import Item from "model/Base/Item";
+    import List from "model/Base/List";
+    import INewable from "model/Base/INewable";
     export default class ItemList<T extends Item> extends List<T> {
         readonly type: INewable<T>;
         constructor(type: INewable<T>);
@@ -60,8 +131,8 @@ declare module "Base/ItemList" {
         load(manager: ItemList<T>): void;
     }
 }
-declare module "Base/Item" {
-    import IKeyValue from "Base/IKeyValue";
+declare module "model/Base/Item" {
+    import IKeyValue from "model/Base/IKeyValue";
     export default class Item {
         protected static IgnoreList: Array<string>;
         protected static IncludeList: Array<string>;
@@ -73,8 +144,8 @@ declare module "Base/Item" {
         toJSON(key: string): IKeyValue;
     }
 }
-declare module "Base/NameItem" {
-    import Item from "Base/Item";
+declare module "model/Base/NameItem" {
+    import Item from "model/Base/Item";
     export default class NameItem extends Item {
         protected _name: string;
         protected static IgnoreList: Array<string>;
@@ -87,17 +158,17 @@ declare module "Base/NameItem" {
         get wavelCase(): string;
     }
 }
-declare module "Base/UniqueItem" {
-    import NameItem from "Base/NameItem";
+declare module "model/Base/UniqueItem" {
+    import NameItem from "model/Base/NameItem";
     export default class UniqueItem extends NameItem {
         get name(): string;
         set name(name: string);
     }
 }
-declare module "Base/UniqueList" {
-    import ItemList from "Base/ItemList";
-    import UniqueItem from "Base/UniqueItem";
-    import INewable from "Base/INewable";
+declare module "model/Base/UniqueList" {
+    import ItemList from "model/Base/ItemList";
+    import UniqueItem from "model/Base/UniqueItem";
+    import INewable from "model/Base/INewable";
     export default class UniqueList<T extends UniqueItem> extends ItemList<T> {
         constructor(type: INewable<T>);
         throwIfExist(name: string): void;
@@ -108,9 +179,9 @@ declare module "Base/UniqueList" {
         sort(): void;
     }
 }
-declare module "Schema/Rule" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
+declare module "model/Schema/Rule" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
     export default class Rule extends UniqueItem {
         value: string;
     }
@@ -118,8 +189,8 @@ declare module "Schema/Rule" {
         constructor();
     }
 }
-declare module "Schema/Seed" {
-    import Item from "Base/Item";
+declare module "model/Schema/Seed" {
+    import Item from "model/Base/Item";
     export default class Seed extends Item {
         unique: boolean;
         type: string;
@@ -127,11 +198,11 @@ declare module "Schema/Seed" {
         parameter: string;
     }
 }
-declare module "Event/ItemDeleteListener" {
+declare module "model/Event/ItemDeleteListener" {
     import { EventEmitter } from 'events';
     import StrictEventEmitter from 'strict-event-emitter-types';
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
     enum EventEnum {
         BeforeFieldDelete = "BeforeFieldDelete",
         AfterFieldDelete = "AfterFieldDelete"
@@ -153,11 +224,11 @@ declare module "Event/ItemDeleteListener" {
     const listener: ItemDeleteListener<UniqueList<UniqueItem>, UniqueItem>;
     export default listener;
 }
-declare module "Schema/Field" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
-    import { RuleManager } from "Schema/Rule";
-    import Seed from "Schema/Seed";
+declare module "model/Schema/Field" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
+    import { RuleManager } from "model/Schema/Rule";
+    import Seed from "model/Schema/Seed";
     export default class Field extends UniqueItem {
         allowNull: boolean;
         cast: string;
@@ -186,9 +257,9 @@ declare module "Schema/Field" {
         get incrementField(): Field | undefined;
     }
 }
-declare module "Schema/Index" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
+declare module "model/Schema/Index" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
     export enum IndexTypeEnum {
         index = "index",
         primary = "primary",
@@ -205,9 +276,9 @@ declare module "Schema/Index" {
         get uniqueIndexList(): Index[];
     }
 }
-declare module "Schema/Property" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
+declare module "model/Schema/Property" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
     export default class Property extends UniqueItem {
         data: {};
         tag: string;
@@ -217,10 +288,10 @@ declare module "Schema/Property" {
         constructor();
     }
 }
-declare module "Schema/Preset" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
-    import { PropertyManager } from "Schema/Property";
+declare module "model/Schema/Preset" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
+    import { PropertyManager } from "model/Schema/Property";
     export default class Preset extends UniqueItem {
         original: boolean;
         color: string;
@@ -232,10 +303,10 @@ declare module "Schema/Preset" {
         constructor();
     }
 }
-declare module "Schema/Relation" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
-    import Entity from "Schema/Entity";
+declare module "model/Schema/Relation" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
+    import Entity from "model/Schema/Entity";
     export default class Relation extends UniqueItem {
         type: string;
         parameter: string;
@@ -246,19 +317,19 @@ declare module "Schema/Relation" {
         link(entity: Entity): Relation;
     }
 }
-declare module "Schema/Middleware" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
+declare module "model/Schema/Middleware" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
     export default class Middleware extends UniqueItem {
     }
     export class MiddlewareManager extends UniqueList<Middleware> {
         constructor();
     }
 }
-declare module "Schema/Route" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
-    import { MiddlewareManager } from "Schema/Middleware";
+declare module "model/Schema/Route" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
+    import { MiddlewareManager } from "model/Schema/Middleware";
     export default class Route extends UniqueItem {
         method: string;
         path: string;
@@ -269,10 +340,10 @@ declare module "Schema/Route" {
         constructor();
     }
 }
-declare module "Service/Text" {
-    import UniqueItem from "Base/UniqueItem";
-    import { DataForScript } from "DataForScript";
-    export const script = "function run(data) {\n    /** @type {DataForScript} */\n    const ddd = data\n}\n";
+declare module "model/Service/Text" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import { DataForScript } from "model/DataForScript";
+    export const script = "function run(data) {\n    /** @type {DataForScript} */\n    const ddd = data\n\n    /**\n     * write code below\n     * it will be executed before generating files of this Entity\n     */\n}\n";
     export function addQuote(text: any, quote?: string): any;
     export function runText(text: string, data: Object): string;
     export function filter(keyword: string, list: Array<UniqueItem>): UniqueItem[];
@@ -282,15 +353,15 @@ declare module "Service/Text" {
     export function run(code: string, data: object): void;
     export function runAndRender(data: DataForScript): string;
 }
-declare module "Schema/Entity" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
-    import { FieldManager } from "Schema/Field";
-    import { IndexManager } from "Schema/Index";
-    import { PresetManager } from "Schema/Preset";
-    import { RelationManager } from "Schema/Relation";
-    import { RouteManager } from "Schema/Route";
-    import { MiddlewareManager } from "Schema/Middleware";
+declare module "model/Schema/Entity" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
+    import { FieldManager } from "model/Schema/Field";
+    import { IndexManager } from "model/Schema/Index";
+    import { PresetManager } from "model/Schema/Preset";
+    import { RelationManager } from "model/Schema/Relation";
+    import { RouteManager } from "model/Schema/Route";
+    import { MiddlewareManager } from "model/Schema/Middleware";
     export default class Entity extends UniqueItem {
         color: string;
         description: string;
@@ -306,7 +377,7 @@ declare module "Schema/Entity" {
         readonly relationManager: RelationManager;
         readonly routeManager: RouteManager;
         constructor(name: string);
-        getData(name: string): import("Schema/Preset").default | undefined;
+        getData(name: string): import("model/Schema/Preset").default | undefined;
         get primaryKey(): string;
         get hasTimeStamp(): boolean;
     }
@@ -314,17 +385,17 @@ declare module "Schema/Entity" {
         constructor();
     }
 }
-declare module "Schema/Node" {
-    import UniqueItem from "Base/UniqueItem";
+declare module "model/Schema/Node" {
+    import UniqueItem from "model/Base/UniqueItem";
     export default class Node extends UniqueItem {
         description: string;
         isLayer: boolean;
         nsPattern: string;
     }
 }
-declare module "Schema/Option" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
+declare module "model/Schema/Option" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
     export default class Option extends UniqueItem {
         included: boolean;
         value: string;
@@ -334,10 +405,10 @@ declare module "Schema/Option" {
         constructor();
     }
 }
-declare module "Schema/Artisan" {
-    import UniqueItem from "Base/UniqueItem";
-    import UniqueList from "Base/UniqueList";
-    import { OptionManager } from "Schema/Option";
+declare module "model/Schema/Artisan" {
+    import UniqueItem from "model/Base/UniqueItem";
+    import UniqueList from "model/Base/UniqueList";
+    import { OptionManager } from "model/Schema/Option";
     export default class Artisan extends UniqueItem {
         original: boolean;
         color: string;
@@ -350,10 +421,10 @@ declare module "Schema/Artisan" {
         constructor();
     }
 }
-declare module "Schema/Folder" {
-    import UniqueList from "Base/UniqueList";
-    import Layer, { LayerManager } from "Schema/Layer";
-    import Node from "Schema/Node";
+declare module "model/Schema/Folder" {
+    import UniqueList from "model/Base/UniqueList";
+    import Layer, { LayerManager } from "model/Schema/Layer";
+    import Node from "model/Schema/Node";
     interface ActionLayer {
         (layer: Layer): void;
     }
@@ -381,12 +452,12 @@ declare module "Schema/Folder" {
         make(name: string): Folder;
     }
 }
-declare module "Schema/Project" {
-    import NameItem from "Base/NameItem";
-    import { ArtisanManager } from "Schema/Artisan";
-    import { EntityManager } from "Schema/Entity";
-    import Folder from "Schema/Folder";
-    import { PresetManager } from "Schema/Preset";
+declare module "model/Schema/Project" {
+    import NameItem from "model/Base/NameItem";
+    import { ArtisanManager } from "model/Schema/Artisan";
+    import { EntityManager } from "model/Schema/Entity";
+    import Folder from "model/Schema/Folder";
+    import { PresetManager } from "model/Schema/Preset";
     export default class Project extends NameItem {
         version: number;
         apiVersion: string;
@@ -400,17 +471,17 @@ declare module "Schema/Project" {
         readonly entityManager: EntityManager;
         readonly folder: Folder;
         readonly presetManager: PresetManager;
-        getEntity(name: string): import("Schema/Entity").default | undefined;
-        getLayer(path: string, layer: string): import("Schema/Layer").default | undefined;
-        getPreset(name: string): import("Schema/Preset").default | undefined;
+        getEntity(name: string): import("model/Schema/Entity").default | undefined;
+        getLayer(path: string, layer: string): import("model/Schema/Layer").default | undefined;
+        getPreset(name: string): import("model/Schema/Preset").default | undefined;
     }
 }
-declare module "Schema/Layer" {
-    import UniqueList from "Base/UniqueList";
-    import Entity from "Schema/Entity";
-    import Node from "Schema/Node";
-    import { PresetManager } from "Schema/Preset";
-    import Project from "Schema/Project";
+declare module "model/Schema/Layer" {
+    import UniqueList from "model/Base/UniqueList";
+    import Entity from "model/Schema/Entity";
+    import Node from "model/Schema/Node";
+    import { PresetManager } from "model/Schema/Preset";
+    import Project from "model/Schema/Project";
     export enum LayerEnum {
         Migration = "Migration",
         Model = "Model"
@@ -429,7 +500,7 @@ declare module "Schema/Layer" {
         template: string;
         readonly dataManager: PresetManager;
         getClassName(entity: Entity): string;
-        getData(name: string): import("Schema/Preset").default | undefined;
+        getData(name: string): import("model/Schema/Preset").default | undefined;
         getFileName(entity: Entity): string;
         getFilePath(project: Project, entity: Entity): string;
         getFullName(project: Project, entity: Entity): string;
@@ -442,11 +513,11 @@ declare module "Schema/Layer" {
         make(name: string): Layer;
     }
 }
-declare module "DataForScript" {
+declare module "model/DataForScript" {
     import { LoDashStatic } from 'lodash';
-    import Entity from "Schema/Entity";
-    import Layer from "Schema/Layer";
-    import Project from "Schema/Project";
+    import Entity from "model/Schema/Entity";
+    import Layer from "model/Schema/Layer";
+    import Project from "model/Schema/Project";
     export interface DataForScript {
         entity: Entity;
         layer: Layer;
@@ -454,15 +525,15 @@ declare module "DataForScript" {
         project: Project;
     }
 }
-declare module "Base/IUniqueItemWithColor" {
-    import UniqueItem from "Base/UniqueItem";
+declare module "model/Base/IUniqueItemWithColor" {
+    import UniqueItem from "model/Base/UniqueItem";
     export default interface IUniqueItemWithColor extends UniqueItem {
         color: string;
     }
 }
-declare module "Service/SideBar" {
-    import IUniqueItemWithColor from "Base/IUniqueItemWithColor";
-    import UniqueList from "Base/UniqueList";
+declare module "model/Service/SideBar" {
+    import IUniqueItemWithColor from "model/Base/IUniqueItemWithColor";
+    import UniqueList from "model/Base/UniqueList";
     export default class SideBar {
         readonly manager: UniqueList<IUniqueItemWithColor> | null;
         color: string;
@@ -470,10 +541,10 @@ declare module "Service/SideBar" {
         item: IUniqueItemWithColor | null;
         keyword: string;
         constructor(manager: UniqueList<IUniqueItemWithColor>);
-        get list(): import("Base/UniqueItem").default[];
+        get list(): import("model/Base/UniqueItem").default[];
     }
 }
-declare module "Dialogue/Dialogue" {
+declare module "model/Dialogue/Dialogue" {
     export default class Dialogue {
         size: string;
         title: string;
@@ -483,17 +554,17 @@ declare module "Dialogue/Dialogue" {
         hide(): void;
     }
 }
-declare module "Dialogue/InputDialogue" {
-    import Dialogue from "Dialogue/Dialogue";
+declare module "model/Dialogue/InputDialogue" {
+    import Dialogue from "model/Dialogue/Dialogue";
     export default class InputDialogue extends Dialogue {
         text: string;
         showText(title: string, text: string, callback: CallableFunction, size?: string): void;
     }
 }
-declare module "Dialogue/ListDialogue" {
-    import Dialogue from "Dialogue/Dialogue";
-    import Item from "Base/Item";
-    import UniqueItem from "Base/UniqueItem";
+declare module "model/Dialogue/ListDialogue" {
+    import Dialogue from "model/Dialogue/Dialogue";
+    import Item from "model/Base/Item";
+    import UniqueItem from "model/Base/UniqueItem";
     export default class ListDialogue extends Dialogue {
         keyword: string;
         source: Array<UniqueItem>;
@@ -505,8 +576,8 @@ declare module "Dialogue/ListDialogue" {
         select(item: Item): void;
     }
 }
-declare module "Service/Loader" {
-    import Project from "Schema/Project";
+declare module "model/Service/Loader" {
+    import Project from "model/Schema/Project";
     export default class Loader {
         static load(source: Project, preset: Project): Project;
         private static loadPreset;
@@ -514,7 +585,7 @@ declare module "Service/Loader" {
         private static isProject;
     }
 }
-declare module "DataBase/IData" {
+declare module "model/DataBase/IData" {
     export enum DriverEnum {
         mysql = "mysql",
         pgsql = "pgsql"
@@ -566,12 +637,12 @@ declare module "DataBase/IData" {
         indexname: string;
     }
 }
-declare module "DataBase/DBConvertor" {
-    import { IData, ITableMySQL, ITablePGSQL } from "DataBase/IData";
-    import Entity from "Schema/Entity";
-    import Field from "Schema/Field";
-    import Project from "Schema/Project";
-    import { PropertyManager } from "Schema/Property";
+declare module "model/DataBase/DBConvertor" {
+    import { IData, ITableMySQL, ITablePGSQL } from "model/DataBase/IData";
+    import Entity from "model/Schema/Entity";
+    import Field from "model/Schema/Field";
+    import Project from "model/Schema/Project";
+    import { PropertyManager } from "model/Schema/Property";
     export default abstract class DBConvertor {
         readonly preset: Project;
         readonly project: Project;
@@ -582,7 +653,7 @@ declare module "DataBase/DBConvertor" {
         readonly skip: boolean;
         constructor(project: Project, preset: Project, skip: boolean);
         convert(data: IData): void;
-        getIncrement(name: string): import("Schema/Property").default | undefined;
+        getIncrement(name: string): import("model/Schema/Property").default | undefined;
         editSpecialField(field: Field): void;
         isInteger(field: Field): boolean;
         abstract getPresetKeyOfFieldType(): string;
@@ -590,31 +661,31 @@ declare module "DataBase/DBConvertor" {
         abstract convertTable(table: ITableMySQL | ITablePGSQL, entity: Entity): void;
     }
 }
-declare module "DataBase/MySQLConvertor" {
-    import DBConvertor from "DataBase/DBConvertor";
-    import { ITableMySQL, IFieldMySQL, IIndexMySQL } from "DataBase/IData";
-    import Entity from "Schema/Entity";
+declare module "model/DataBase/MySQLConvertor" {
+    import DBConvertor from "model/DataBase/DBConvertor";
+    import { ITableMySQL, IFieldMySQL, IIndexMySQL } from "model/DataBase/IData";
+    import Entity from "model/Schema/Entity";
     export default class MySQLConvertor extends DBConvertor {
         getPresetKeyOfFieldType(): string;
         getPresetKeyOfIncrementMap(): string;
         convertTable(table: ITableMySQL, entity: Entity): void;
-        convertField(field: IFieldMySQL, entity: Entity): import("Schema/Field").default;
+        convertField(field: IFieldMySQL, entity: Entity): import("model/Schema/Field").default;
         convertIndex(table: ITableMySQL, entity: Entity): void;
         addIndex(name: string, list: Array<IIndexMySQL>, entity: Entity): void;
         getTypeName(name: string): string;
         convertType(field: IFieldMySQL): string;
     }
 }
-declare module "DataBase/PGSQLConvertor" {
-    import DBConvertor from "DataBase/DBConvertor";
-    import { ITablePGSQL, IFieldPGSQL, IIndexPGSQL } from "DataBase/IData";
-    import Entity from "Schema/Entity";
-    import { IndexTypeEnum } from "Schema/Index";
+declare module "model/DataBase/PGSQLConvertor" {
+    import DBConvertor from "model/DataBase/DBConvertor";
+    import { ITablePGSQL, IFieldPGSQL, IIndexPGSQL } from "model/DataBase/IData";
+    import Entity from "model/Schema/Entity";
+    import { IndexTypeEnum } from "model/Schema/Index";
     export default class PGSQLConvertor extends DBConvertor {
         getPresetKeyOfFieldType(): string;
         getPresetKeyOfIncrementMap(): string;
         convertTable(table: ITablePGSQL, entity: Entity): void;
-        convertField(field: IFieldPGSQL, entity: Entity): import("Schema/Field").default;
+        convertField(field: IFieldPGSQL, entity: Entity): import("model/Schema/Field").default;
         convertIndex(table: ITablePGSQL, entity: Entity): void;
         addPrimary(list: Array<string>, entity: Entity): void;
         addIndex(type: IndexTypeEnum, list: Array<string>, entity: Entity): void;
@@ -622,9 +693,9 @@ declare module "DataBase/PGSQLConvertor" {
         convertType(field: IFieldPGSQL): string;
     }
 }
-declare module "DataBase/Convertor" {
-    import { IData } from "DataBase/IData";
-    import Project from "Schema/Project";
+declare module "model/DataBase/Convertor" {
+    import { IData } from "model/DataBase/IData";
+    import Project from "model/Schema/Project";
     export default class Convertor {
         readonly preset: Project;
         readonly project: Project;
@@ -633,84 +704,17 @@ declare module "DataBase/Convertor" {
         convert(data: IData): void;
     }
 }
-declare module "Dialogue/NameDialogue" {
-    import Dialogue from "Dialogue/Dialogue";
+declare module "model/Dialogue/NameDialogue" {
+    import Dialogue from "model/Dialogue/Dialogue";
     export default class NameDialogue extends Dialogue {
         size: string;
         text: string;
         showInput(title: string, text?: string, callback?: CallableFunction | null): void;
     }
 }
-declare module "Bridge/ActionEnum" {
-    export enum ActionEnum {
-        edit = "edit",
-        error = "error",
-        get = "get",
-        load = "load",
-        move = "move",
-        open = "open",
-        post = "post",
-        read = "read",
-        refresh = "refresh",
-        save = "save",
-        write = "write"
-    }
-}
-declare module "Bridge/IResponse" {
-    import { ActionEnum } from "Bridge/ActionEnum";
-    export default interface IResponse {
-        action: ActionEnum;
-        data: any;
-        key: string;
-        message: string;
-        status: number;
-    }
-}
-declare module "Bridge/IHandler" {
-    import IResponse from "Bridge/IResponse";
-    export default interface IHandler {
-        (data: IResponse): void;
-    }
-}
-declare module "Bridge/HandlerManager" {
-    import { ActionEnum } from "Bridge/ActionEnum";
-    import IHandler from "Bridge/IHandler";
-    export default class HandlerManager {
-        readonly map: Map<ActionEnum, Map<string, IHandler>>;
-        constructor();
-        make(action: ActionEnum): void;
-        add(action: ActionEnum, key: string, handler?: IHandler): void;
-        find(action: ActionEnum, key: string): IHandler | undefined;
-    }
-}
-declare module "Bridge/Bridge" {
-    import { ActionEnum } from "Bridge/ActionEnum";
-    import HandlerManager from "Bridge/HandlerManager";
-    import IResponse from "Bridge/IResponse";
-    export default class Bridge {
-        readonly manager: HandlerManager;
-        constructor(manager: HandlerManager);
-        call(response: IResponse): void;
-        isHTTP(action: ActionEnum): boolean;
-        error(code: number, message: string): void;
-    }
-}
-declare module "Bridge/IJavaBridge" {
-    export default interface IJavaBridge {
-        call(json: string): void;
-    }
-}
-declare module "Bridge/ICEFW" {
-    import Bridge from "Bridge/Bridge";
-    import IJavaBridge from "Bridge/IJavaBridge";
-    export default interface ICEFW extends Window {
-        bridge: Bridge;
-        JavaBridge: IJavaBridge;
-    }
-}
-declare module "Bridge/Response" {
-    import { ActionEnum } from "Bridge/ActionEnum";
-    import IResponse from "Bridge/IResponse";
+declare module "model/Bridge/Response" {
+    import { ActionEnum } from "model/Bridge/ActionEnum";
+    import IResponse from "model/Bridge/IResponse";
     export default class Response implements IResponse {
         action: ActionEnum;
         key: string;
@@ -720,10 +724,10 @@ declare module "Bridge/Response" {
         constructor(action: ActionEnum, key: string, data: string, message: string, status: number);
     }
 }
-declare module "Service/Save" {
-    import Project from "Schema/Project";
-    import IHandler from "Bridge/IHandler";
-    import Route from "Bridge/Route";
+declare module "model/Service/Save" {
+    import Project from "model/Schema/Project";
+    import IHandler from "model/Bridge/IHandler";
+    import Route from "model/Bridge/Route";
     export default class Save {
         static last: string;
         static run(project: Project, route: Route, handler?: IHandler): void;
@@ -731,8 +735,8 @@ declare module "Service/Save" {
         private static makeName;
     }
 }
-declare module "Bridge/Payload" {
-    import { ActionEnum } from "Bridge/ActionEnum";
+declare module "model/Bridge/Payload" {
+    import { ActionEnum } from "model/Bridge/ActionEnum";
     export default class Payload {
         action: ActionEnum;
         key: string;
@@ -741,11 +745,11 @@ declare module "Bridge/Payload" {
         static make(action: ActionEnum, key: string, data: string): Payload;
     }
 }
-declare module "Bridge/ToJava" {
-    import { ActionEnum } from "Bridge/ActionEnum";
-    import HandlerManager from "Bridge/HandlerManager";
-    import ICEFW from "Bridge/ICEFW";
-    import IHandler from "Bridge/IHandler";
+declare module "model/Bridge/ToJava" {
+    import { ActionEnum } from "model/Bridge/ActionEnum";
+    import HandlerManager from "model/Bridge/HandlerManager";
+    import ICEFW from "model/Bridge/ICEFW";
+    import IHandler from "model/Bridge/IHandler";
     export default class ToJava {
         readonly manager: HandlerManager;
         readonly window: ICEFW;
@@ -753,11 +757,11 @@ declare module "Bridge/ToJava" {
         send(action: ActionEnum, key: string, data: string, handler?: IHandler): void;
     }
 }
-declare module "Bridge/Route" {
-    import Project from "Schema/Project";
-    import { ActionEnum } from "Bridge/ActionEnum";
-    import IHandler from "Bridge/IHandler";
-    import ToJava from "Bridge/ToJava";
+declare module "model/Bridge/Route" {
+    import Project from "model/Schema/Project";
+    import { ActionEnum } from "model/Bridge/ActionEnum";
+    import IHandler from "model/Bridge/IHandler";
+    import ToJava from "model/Bridge/ToJava";
     export default class Route {
         readonly service: ToJava;
         constructor(service: ToJava);
@@ -773,43 +777,44 @@ declare module "Bridge/Route" {
         write(file: string, data: string, handler?: IHandler): void;
     }
 }
-declare module "Bridge/StatusEnum" {
+declare module "model/Bridge/StatusEnum" {
     export enum StatusEnum {
         OK = 200,
         Error = 400
     }
 }
-declare module "Service/Start" {
-    import ICEFW from "Bridge/ICEFW";
-    import Route from "Bridge/Route";
-    import State from "State";
+declare module "model/Service/Start" {
+    import ICEFW from "model/Bridge/ICEFW";
+    import Route from "model/Bridge/Route";
+    import State from "model/State";
     export default class Start {
         static run(state: State, window: ICEFW): Route;
     }
 }
-declare module "Service/RunScript" {
-    import Entity from "Schema/Entity";
-    import Layer from "Schema/Layer";
-    import Project from "Schema/Project";
+declare module "model/Service/RunScript" {
+    import Entity from "model/Schema/Entity";
+    import Layer from "model/Schema/Layer";
+    import Project from "model/Schema/Project";
     export default class RunScript {
         static runAndRender(project: Project, layer: Layer, entity: Entity): string;
         static runFaker(project: Project, entity: Entity): void;
         static runValidation(project: Project, entity: Entity): void;
     }
 }
-declare module "State" {
-    import Project from "Schema/Project";
-    import SideBar from "Service/SideBar";
-    import InputDialogue from "Dialogue/InputDialogue";
-    import ListDialogue from "Dialogue/ListDialogue";
-    import Layer from "Schema/Layer";
-    import Entity from "Schema/Entity";
-    import { IData } from "DataBase/IData";
-    import NameDialogue from "Dialogue/NameDialogue";
-    import ICEFW from "Bridge/ICEFW";
-    import Route from "Bridge/Route";
+declare module "model/State" {
+    import Project from "model/Schema/Project";
+    import SideBar from "model/Service/SideBar";
+    import InputDialogue from "model/Dialogue/InputDialogue";
+    import ListDialogue from "model/Dialogue/ListDialogue";
+    import Layer from "model/Schema/Layer";
+    import Entity from "model/Schema/Entity";
+    import { IData } from "model/DataBase/IData";
+    import NameDialogue from "model/Dialogue/NameDialogue";
+    import ICEFW from "model/Bridge/ICEFW";
+    import Route from "model/Bridge/Route";
     export default class State {
         error: null;
+        ide: string;
         route: Route;
         readonly preset: Project;
         project: Project | null;
@@ -833,10 +838,11 @@ declare module "State" {
         getEntity(name: string): Entity | undefined;
         getLayer(path: string, layer: string): Layer | undefined;
         getProject(): Project;
-        getPreset(name: string): import("Schema/Preset").default | undefined;
+        getPreset(name: string): import("model/Schema/Preset").default | undefined;
         render(layer: Layer, entity: Entity): string;
         setFaker(entity: Entity): void;
         setValidation(entity: Entity): void;
+        get inBrowser(): boolean;
         get ready(): boolean;
     }
 }

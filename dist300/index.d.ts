@@ -580,8 +580,10 @@ declare module "model/Service/Loader" {
     import Project from "model/Schema/Project";
     export default class Loader {
         static load(source: Project, preset: Project): Project;
+        static upgrade(source: Project, preset: Project): Project;
         private static loadPreset;
         private static addIfNotExist;
+        private static loadFolder;
         private static isProject;
     }
 }
@@ -818,6 +820,7 @@ declare module "model/State" {
         route: Route;
         readonly preset: Project;
         project: Project | null;
+        data: Project | null;
         sidebar: SideBar | null;
         readonly inputDialogue: InputDialogue;
         readonly listDialogue: ListDialogue;
@@ -831,6 +834,7 @@ declare module "model/State" {
         convert(data: IData, skip: boolean): void;
         create(name: string): void;
         load(data: Project): void;
+        upgrade(): void;
         showArtisan(): void;
         showEntity(): void;
         showLayer(): void;

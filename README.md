@@ -7,4 +7,4 @@ Intuitive and efficient code generator for Laravel.
 
 [demo](https://GooGee.github.io/Code-Generator-Page/dist300)
 
-[Script guide](https://github.com/GooGee/Code-Generator-Page/blob/gh-pages/docs/script.md)
+[guide](https://github.com/GooGee/Code-Generator-Page/blob/main/docs/guide.md)

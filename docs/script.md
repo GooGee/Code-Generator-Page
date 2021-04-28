@@ -16,7 +16,7 @@ function run(data) {
 ## Notice
 
 - function must be on the first line
-- [DataForScript doc](https://googee.github.io/Code-Generator-Page/docs200/model/interfaces/dataforscript.html)
+- [DataForScript doc](https://googee.github.io/Code-Generator-Page/docs300/model/interfaces/dataforscript.html)
 - do not change anything in `data.project`, `data.layer`, `data.entity`, `data.lodash`
 - function will be executed before render template
 - and members in `data` will be available in template
@@ -58,6 +58,6 @@ in template
 ```
 
 
-[Document](https://googee.github.io/Code-Generator-Page/docs200/model/index.html)
+[Documentation](https://googee.github.io/Code-Generator-Page/docs300/model/index.html)
 
 [Template](https://mozilla.github.io/nunjucks/templating.html)

@@ -345,7 +345,7 @@ declare module "model/Schema/Route" {
 declare module "model/Service/Text" {
     import UniqueItem from "model/Base/UniqueItem";
     import { DataForScript } from "model/DataForScript";
-    export const script = "function run(data) {\n    /** @type {DataForScript} */\n    const ddd = data\n\n    /**\n     * write code below\n     * it will be executed before generating files of this Entity\n     */\n}\n";
+    export const script = "function run(data) {\n    /** @type {DataForScript} */\n    const ddd = data\n\n    /**\n     * write code below\n     * it will be executed before generating files of selected Entity\n     */\n}\n";
     export function addQuote(text: any, quote?: string): any;
     export function runText(text: string, data: Object): string;
     export function filter(keyword: string, list: Array<UniqueItem>): UniqueItem[];

@@ -15,5 +15,5 @@
 
 ## Convert database schema to Laravel Migration
 
-![GUI](https://github.com/GooGee/Entity-Builder/raw/main/image/schema.gif)
+![GUI](https://github.com/GooGee/Code-Generator/raw/main/image/schema.gif)
 
